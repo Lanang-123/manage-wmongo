@@ -40,32 +40,58 @@ export const createMahasiswa = async (req, res) => {
         // Generate password sementara, bisa disesuaikan sesuai kebutuhan
         const password = generateRandomString(6);
 
-        const commonId1 = new monggose.Types.ObjectId();
-        const commonId2 = new monggose.Types.ObjectId();
+        // Simpan data mahasiswa
+        const newMahasiswa = new Mahasiswa({ nama, nim, alamat, email, password });
+        await newMahasiswa.save();
 
 
+        const newUser = new User({ email, password, role: "Mahasiswa", nama });
+        await newUser.save();
 
-        // // Simpan data mahasiswa
-        const newMahasiswa = new Mahasiswa({ id: commonId1, nama, nim, alamat, email, password });
-        const newUser = new User({ id: commonId2, email, password, role: "Mahasiswa", nama });
+        res.status(201).json({ message: "Data berhasil ditambahkan", status: 201 });
+    } catch (error) {
+        res.status(500).json({ message: error.message, status: 500 });
+    }
+};
 
-        const session = await monggose.startSession();
-        session.startTransaction();
+export const updateMahasiswa = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { nama, nim, alamat } = req.body;
 
-        try {
-            await newMahasiswa.save({ session });
-            await newUser.save({ session });
+        // Periksa apakah mahasiswa dengan id tersebut ada
+        const existingMahasiswa = await Mahasiswa.findById(id);
 
-            await session.commitTransaction();
-        } catch (error) {
-            await session.abortTransaction();
-            throw error;
-        } finally {
-            session.endSession();
+        if (!existingMahasiswa) {
+            return res.status(404).json({ message: "Mahasiswa tidak ditemukan", status: 404 });
         }
 
+        // Update data mahasiswa
+        existingMahasiswa.nama = nama;
+        existingMahasiswa.nim = nim;
+        existingMahasiswa.alamat = alamat;
 
-        res.status(201).json({ message: "Mahasiswa berhasil ditambahkan", status: 201 });
+        await existingMahasiswa.save();
+
+        res.status(200).json({ message: "Data mahasiswa berhasil diperbarui", status: 200 });
+    } catch (error) {
+        res.status(500).json({ message: error.message, status: 500 });
+    }
+};
+
+export const deleteMahasiswa = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        // Hapus data mahasiswa
+        const resultMahasiswa = await Mahasiswa.findByIdAndDelete(id);
+
+        // Hapus data user (jika ingin dihapus)
+        if (resultMahasiswa) {
+            await User.findOneAndDelete({ email: resultMahasiswa.email });
+        }
+
+        res.status(200).json({ message: "Data mahasiswa berhasil dihapus", status: 200 });
     } catch (error) {
         res.status(500).json({ message: error.message, status: 500 });
     }

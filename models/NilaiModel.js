@@ -1,10 +1,6 @@
 import mongoose from "mongoose";
 
 const Nilai = mongoose.Schema({
-    id: {
-        type: String,
-        unique: true
-    },
     nim: {
         type: Number,
         require: true

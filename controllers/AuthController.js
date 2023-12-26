@@ -2,6 +2,8 @@ import User from "../models/UserModel.js";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt"
 
+const blacklistedRefreshTokens = [];
+
 const getUser = async (req, res) => {
     try {
         // Mendapatkan token akses dari header permintaan
@@ -33,10 +35,10 @@ const register = async (req, res) => {
     try {
         const { nama, email, password, role } = req.body;
 
-        const salt = await bcrypt.genSalt();
-        const hashPassword = await bcrypt.hash(password, salt);
+        // const salt = await bcrypt.genSalt();
+        // const hashPassword = await bcrypt.hash(password, salt);
 
-        const newUser = new User({ nama, email, password: hashPassword, role });
+        const newUser = new User({ nama, email, password, role });
 
         await newUser.save();
 
@@ -55,11 +57,11 @@ const login = async (req, res) => {
         if (!user) {
             return res.status(404).json({ message: "User tidak ditemukan", status: 404 });
         }
-        const passwordMatch = await bcrypt.compare(password, user.password);
+        // const passwordMatch = await bcrypt.compare(password, user.password);
 
-        if (!passwordMatch) {
-            return res.status(401).json({ message: "Password tidak cocok", status: 401 });
-        }
+        // if (!passwordMatch) {
+        //     return res.status(401).json({ message: "Password tidak cocok", status: 401 });
+        // }
 
         let emailUser = user.email;
         let userId = user._id;
@@ -83,4 +85,30 @@ const login = async (req, res) => {
 }
 
 
-export { register, login, getUser }
+const logout = async (req, res) => {
+    try {
+        const refreshToken = req.cookies.refreshToken;
+
+        // Blacklist token refresh
+        blacklistedRefreshTokens.push(refreshToken);
+
+        // Hapus cookie refreshToken dari client
+        res.clearCookie('refreshToken');
+
+        // Dapatkan userId dari decoded refresh token
+        const decodedRefreshToken = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
+        const userId = decodedRefreshToken.userId;
+
+        // Kosongkan properti refresh_token pada model User
+        await User.updateOne({ _id: userId }, { refresh_token: '' });
+
+        res.status(200).json({ message: "Logout berhasil", status: 200 });
+    } catch (error) {
+        res.status(500).json({ message: error.message, status: 500 });
+    }
+}
+
+export { register, login, getUser, logout }
+
+
+

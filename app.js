@@ -8,6 +8,7 @@ import MataKuliah from "./routes/MataKuliahRoute.js";
 import Nilai from "./routes/NilaiRoute.js";
 import KHS from "./routes/KHSRoute.js"
 import Auth from "./routes/AuthRoute.js"
+import Dosen from "./routes/DosenRoute.js"
 import { verifyToken } from "./middleware/VerifyToken.js";
 
 
@@ -39,6 +40,7 @@ app.use('/mahasiswa', verifyToken, Mahasiswa);
 app.use('/matakuliah', verifyToken, MataKuliah);
 app.use('/nilai', verifyToken, Nilai);
 app.use('/khs', verifyToken, KHS);
+app.use('/dosen', verifyToken, Dosen);
 app.use('/auth', Auth);
 
 

@@ -1,10 +1,6 @@
 import mongoose from "mongoose";
 
 const MataKuliah = mongoose.Schema({
-    id: {
-        type: String,
-        unique: true,
-    },
     kode_mk: {
         type: String,
         required: true

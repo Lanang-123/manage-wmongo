@@ -1,10 +1,6 @@
 import mongoose from "mongoose";
 
 const KHS = mongoose.Schema({
-    id: {
-        type: String,
-        unique: true
-    },
     nama: {
         type: String,
         require: true
