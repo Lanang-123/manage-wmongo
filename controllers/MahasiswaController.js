@@ -1,6 +1,7 @@
 import Mahasiswa from "../models/MahasiswaModel.js";
 import User from "../models/UserModel.js";
 import monggose from "mongoose";
+import jwt from "jsonwebtoken";
 
 
 const generateRandomString = (length) => {
@@ -22,6 +23,30 @@ export const getMahasiswa = async (req, res) => {
         res.status(500).json({ "message": error, status: 400 });
     }
 }
+
+export const getMahasiswaLogin = async (req, res) => {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+    let searchEmail = '';
+
+    if (!token) {
+        return res.status(401).json({ message: "Token akses tidak tersedia", status: 401 });
+    }
+
+    // Mendekode token akses
+    jwt.verify(token, process.env.ACCESS_TOKEN, (err, decoded) => {
+        if (err) {
+            return res.status(403).json({ message: "Token akses tidak valid", status: 403 });
+        }
+
+        // Dapatkan data user dari decoded token
+        const { emailUser } = decoded;
+        searchEmail = emailUser;
+    });
+
+    const data = await Mahasiswa.find({ email: searchEmail });
+    return res.status(200).json({ data, status: 200 });
+};
 
 export const createMahasiswa = async (req, res) => {
     try {
